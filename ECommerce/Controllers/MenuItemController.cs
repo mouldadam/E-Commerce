@@ -5,6 +5,7 @@ using ECommerce_API.Models.Dto;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
+using System.Reflection.Metadata;
 
 namespace ECommerce_API.Controllers
 {
@@ -24,7 +25,15 @@ namespace ECommerce_API.Controllers
         [HttpGet]
         public IActionResult GetMenuItems()
         {
-            _response.Result = _db.MenuItems.ToList();
+            var menuItems = _db.MenuItems.ToList();
+            var orderDetailsWithRatings = _db.OrderDetails.Where(u => u.Rating != null).ToList();
+            foreach(var menuItem in menuItems)
+            {
+                var ratings = orderDetailsWithRatings.Where(u => u.MenuItemId == menuItem.Id).Select(u => u.Rating!.Value);
+                var avgRating = ratings.Any() ? ratings.Average() : 0;
+                menuItem.Ratings = avgRating;
+            }
+            _response.Result = menuItems;
             _response.StatusCode = HttpStatusCode.OK;
             return Ok(_response);
 
@@ -40,6 +49,13 @@ namespace ECommerce_API.Controllers
                 return BadRequest(_response);
             }
             var menuItem = _db.MenuItems.FirstOrDefault(u => u.Id == id);
+
+            var orderDetailsWithRatings = _db.OrderDetails.Where(u => u.Rating != null && u.MenuItemId == menuItem!.Id).ToList();
+ 
+                var ratings = orderDetailsWithRatings.Select(u => u.Rating!.Value);
+                var avgRating = ratings.Any() ? ratings.Average() : 0;
+                menuItem!.Ratings = avgRating;
+
             _response.Result = menuItem;
             _response.StatusCode = HttpStatusCode.OK;
             return Ok(_response);
