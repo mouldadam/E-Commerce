@@ -1,8 +1,14 @@
 import MenuItemModal from "../../components/menuItems/MenuItemModal";
 import MenuItemTable from "../../components/menuItems/MenuItemTable";
-import { useGetMenuItemsQuery } from "../../store/api/menuItemApi";
+import {
+  useGetMenuItemsQuery,
+  useCreateMenuItemMutation,
+  useDeleteMenuItemMutation,
+  useUpdateMenuItemMutation,
+} from "../../store/api/menuItemApi";
 import { useState } from "react";
-
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 function MenuItemManagement() {
   const {
     data: menuItems = [],
@@ -19,27 +25,125 @@ function MenuItemManagement() {
     price: "",
     image: null,
   });
+
+  const [createMenuItem] = useCreateMenuItemMutation();
+  const [deleteMenuItem] = useDeleteMenuItemMutation();
+  const [updateMenuItem] = useUpdateMenuItemMutation();
   const [showModal, setShowModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedMenuItem, setSelectedMenuItem] = useState(null);
   const handleCloseModal = () => {
     setShowModal(false);
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, files } = e.target;
     console.log(name, value);
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "image") {
+      setFormData((prev) => ({ ...prev, [name]: files[0] }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
-  const handleFormSubmit = () => {
+  const handleFormSubmit = async (formData) => {
     setIsSubmitting(true);
     try {
-      //call api
+      const formDataToSend = new FormData();
+      formDataToSend.append("Name", formData.name);
+      formDataToSend.append("Category", formData.category);
+      formDataToSend.append("Description", formData.description);
+      formDataToSend.append("Price", formData.price);
+      formDataToSend.append("SpecialTag", formData.specialTag);
+      if (formData.image) {
+        formDataToSend.append("File", formData.image);
+      }
+
+      if (selectedMenuItem) {
+        formDataToSend.append("id", selectedMenuItem.id);
+      }
+
+      let result;
+      if (selectedMenuItem) {
+        result = await updateMenuItem({
+          id: selectedMenuItem.id,
+          formData: formDataToSend,
+        });
+        if (result.isSuccess !== false) {
+          toast.success("Menu Item updated successfully!");
+          refetch();
+        } else {
+          toast.error("Menu Item failed to update!");
+        }
+      } else {
+        result = await createMenuItem(formDataToSend);
+        if (result.isSuccess !== false) {
+          toast.success("Menu Item created successfully!");
+          refetch();
+        } else {
+          toast.error("Menu Item failed to create!");
+        }
+      }
+
+      setShowModal(false);
+      resetForm();
+      console.log(result);
     } catch (error) {
       console.log(error);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleDeleteMenuItem = async (item) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (result.isConfirmed) {
+      await deleteMenuItem(item.id);
+      Swal.fire({
+        title: "Deleted!",
+        text: "Menu item has been deleted.",
+        icon: "success",
+      });
+    }
+  };
+
+  const handleAddMenuItem = async () => {
+    resetForm();
+    setSelectedMenuItem(null);
+    setShowModal(true);
+  };
+
+  const handleEditMenuItem = async (item) => {
+    setSelectedMenuItem(item);
+    setFormData({
+      name: item.name || "",
+      description: item.description || "",
+      specialTag: item.specialTag || "",
+      category: item.category || "",
+      price: item.price || "",
+      image: null,
+    });
+    setShowModal(true);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      description: "",
+      specialTag: "",
+      category: "",
+      price: "",
+      image: null,
+    });
   };
   return (
     <div className="container-fluid p-4 mx-3">
@@ -52,10 +156,7 @@ function MenuItemManagement() {
                 Manage your restaurant's menu items
               </p>
             </div>
-            <button
-              className="btn btn-primary"
-              onClick={() => setShowModal(true)}
-            >
+            <button className="btn btn-primary" onClick={handleAddMenuItem}>
               <i className="bi bi-plus-circle me-2"></i>
               Add Menu Item
             </button>
@@ -70,6 +171,8 @@ function MenuItemManagement() {
                 menuItems={menuItems}
                 isLoading={isLoading}
                 error={error}
+                onDelete={handleDeleteMenuItem}
+                onEdit={handleEditMenuItem}
               />
             </div>
           </div>
@@ -82,6 +185,7 @@ function MenuItemManagement() {
           onClose={handleCloseModal}
           isSubmitting={isSubmitting}
           onChange={handleInputChange}
+          isEditting={!!selectedMenuItem}
         />
       )}
     </div>

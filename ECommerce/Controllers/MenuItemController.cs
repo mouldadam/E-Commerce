@@ -120,7 +120,7 @@ namespace ECommerce_API.Controllers
             return BadRequest(_response);
         }
 
-        [HttpPut("{id:int}")]
+        [HttpPut]
         public async Task<ActionResult<ApiResponse>> UpdateMenuItem(int id, [FromForm] MenuItemUpdateDTO menuItemUpdateDTO)
         {
             try
@@ -193,7 +193,7 @@ namespace ECommerce_API.Controllers
             return BadRequest(_response);
         }
 
-        [HttpDelete("{id:int}")]
+        [HttpDelete]
         public async Task<ActionResult<ApiResponse>> DeleteMenuItem(int id)
         {
             try

@@ -1,28 +1,37 @@
 import { CATEGORY, SPECIAL_TAG } from "../../Utility/constants";
-
+import { toast } from "react-toastify";
 function MenuItemModal({
   onClose,
   isSubmitting,
   onSubmit,
   formData,
   onChange,
+  isEditting,
 }) {
   const handleSubmit = (e) => {
     e.preventDefault();
-
+    let errors = [];
     if (!formData.name?.trim()) {
-      console.log("Name is required");
-      return;
+      errors.push("Name is required");
     }
     if (!formData.category?.trim()) {
-      console.log("Category is required");
-      return;
+      errors.push("Category is required");
     }
-    if (
-      !formData.price ||
-      parseFloat(formData.price <= 0 || formData.price >= 1000)
-    ) {
-      console.log("Price is required and must be between 1-1000");
+
+    if (!formData.price || formData.price <= 0 || formData.price >= 1000) {
+      errors.push("Price is required and must be between 1-1000");
+    }
+    if (errors.length > 0) {
+      toast.error(
+        <div>
+          <strong> Please correct the following:</strong>
+          <ul className="mb-0 mt-1 ps-3">
+            {errors.map((error, index) => (
+              <li key={index}>{error}</li>
+            ))}
+          </ul>
+        </div>,
+      );
       return;
     }
 
@@ -43,7 +52,9 @@ function MenuItemModal({
         <div className={`modal-dialog modal-lg`} role="document">
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title">Add New Menu Item</h5>
+              <h5 className="modal-title">
+                {isEditting ? "Edit Menu Item" : "Add New Menu Item"}
+              </h5>
               <button
                 type="button"
                 className="btn-close"
@@ -138,6 +149,7 @@ function MenuItemModal({
                     className="form-control"
                     name="image"
                     accept="image/*"
+                    onChange={onChange}
                   />
                   <div className="form-text">
                     Upload an image for the menu item
@@ -160,7 +172,9 @@ function MenuItemModal({
                     {isSubmitting ? (
                       <span className="spinner-border spinner-border-sm me-2" />
                     ) : (
-                      <>CREATE MENU ITEM</>
+                      <>
+                        {isEditting ? "Update Menu Item" : "Create Menu Item"}
+                      </>
                     )}
                   </button>
                 </div>

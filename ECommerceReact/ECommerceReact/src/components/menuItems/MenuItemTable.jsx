@@ -1,6 +1,6 @@
 import { API_BASE_URL } from "../../Utility/constants";
 
-function MenuItemTable({ menuItems, isLoading, error }) {
+function MenuItemTable({ menuItems, isLoading, error, onDelete, onEdit }) {
   return (
     <>
       {isLoading ? (
@@ -82,6 +82,7 @@ function MenuItemTable({ menuItems, isLoading, error }) {
                 <td>
                   <div className="btn-group" role="group">
                     <button
+                      onClick={() => onEdit(item)}
                       className="btn btn-sm btn-outline-success"
                       title="Edit"
                     >
@@ -90,6 +91,7 @@ function MenuItemTable({ menuItems, isLoading, error }) {
                     <button
                       className="btn btn-sm btn-outline-danger"
                       title="Delete"
+                      onClick={() => onDelete(item)}
                     >
                       <i className="bi bi-trash"></i>
                     </button>

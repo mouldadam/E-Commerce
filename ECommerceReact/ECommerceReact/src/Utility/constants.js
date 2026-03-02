@@ -4,6 +4,7 @@ export const ROUTES = {
   REGISTER: "register",
   CART: "/cart",
   CHECKOUT: "/checkout",
+  MENU_DETAIL: "/menu/:id",
   ORDER_CONFRIMATION: "/order-confirmation",
   MENU_MANAGEMENT: "/menu-management",
   ORDER_MANAGEMENT: "/order-management",
@@ -20,3 +21,8 @@ export const SPECIAL_TAG = [
   "Chef's Special",
   "New",
 ];
+
+export const ROLES = {
+  ADMIN: "Admin",
+  CUSTOMER: "Customer",
+};
